@@ -242,8 +242,9 @@ use_random_ssh_key() {
 push_code() {
     local app_name="$1";
 
-    debug "starting heroku deployment with git push";
-    git push -f "git@heroku.com:$app_name.git" HEAD:master;
+    debug "starting heroku deployment with heroku deploy:jar";
+#    git push -f "git@heroku.com:$app_name.git" HEAD:master;
+    heroku deploy:jar --jar target/*.war
     local exit_code_push=$?;
 
     debug "git pushed exited with $exit_code_push";

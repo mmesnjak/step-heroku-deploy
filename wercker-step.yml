@@ -1,5 +1,5 @@
 name: heroku-deploy-jar
-version: 0.1.0
+version: 0.1.1
 description: Deploys app to heroku using heroku deploy:jar command
 keywords:
   - heroku

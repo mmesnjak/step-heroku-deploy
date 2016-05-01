@@ -1,3 +1,13 @@
 name: heroku-deploy-jar
-version: 1.0
-description: heroku-deploy-jar step
+version: 0.1.0
+description: Deploys app to heroku using heroku deploy:jar command
+keywords:
+  - heroku
+  - deploy
+properties:
+  key-name:
+    type: string
+    required: true
+  app-name:
+    type: string
+    required: true

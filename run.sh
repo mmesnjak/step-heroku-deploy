@@ -12,80 +12,80 @@ main() {
 
     # Initialize some values
     init_wercker_environment_variables;
-    init_netrc "$WERCKER_HEROKU_DEPLOY_USER" "$WERCKER_HEROKU_DEPLOY_KEY";
+    init_netrc "$WERCKER_HEROKU_DEPLOY_JAR_USER" "$WERCKER_HEROKU_DEPLOY_JAR_KEY";
     init_ssh;
-    init_git "$WERCKER_HEROKU_DEPLOY_USER" "$WERCKER_HEROKU_DEPLOY_USER";
+    init_git "$WERCKER_HEROKU_DEPLOY_JAR_USER" "$WERCKER_HEROKU_DEPLOY_JAR_USER";
     init_gitssh "$gitssh_path" "$ssh_key_path";
 
-    cd "$WERCKER_HEROKU_DEPLOY_SOURCE_DIR" || fail "could not change directory to source_dir \"$WERCKER_HEROKU_DEPLOY_SOURCE_DIR\""
+    cd "$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR" || fail "could not change directory to source_dir \"$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR\""
 
     # Only test authentication if:
     # - A run command was specified, or
     # - No custom ssh key was specified
-    if [ -n "$WERCKER_HEROKU_DEPLOY_RUN" -o -z "$WERCKER_HEROKU_DEPLOY_KEY_NAME" ]; then
+    if [ -n "$WERCKER_HEROKU_DEPLOY_JAR_RUN" -o -z "$WERCKER_HEROKU_DEPLOY_JAR_KEY_NAME" ]; then
         # verify user and key not empty
-        if [ -z "$WERCKER_HEROKU_DEPLOY_USER" ]; then
+        if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_USER" ]; then
             fail "user property is required"
         fi
 
-        if [ -z "$WERCKER_HEROKU_DEPLOY_KEY" ]; then
+        if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_KEY" ]; then
             fail "key property is required (API key)"
         fi
 
-        test_authentication "$WERCKER_HEROKU_DEPLOY_APP_NAME";
+        test_authentication "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
     fi
 
     # Check if the user supplied a wercker key-name
-    if [ -n "$WERCKER_HEROKU_DEPLOY_KEY_NAME" ]; then
-        use_wercker_ssh_key "$ssh_key_path" "$WERCKER_HEROKU_DEPLOY_KEY_NAME";
+    if [ -n "$WERCKER_HEROKU_DEPLOY_JAR_KEY_NAME" ]; then
+        use_wercker_ssh_key "$ssh_key_path" "$WERCKER_HEROKU_DEPLOY_JAR_KEY_NAME";
     else
         use_random_ssh_key "$ssh_key_path";
     fi
 
     # Then check if the user wants to use the git repository or use the files in the source directory
-    if [ "$WERCKER_HEROKU_DEPLOY_KEEP_REPOSITORY" == "true" ]; then
-        use_current_git_directory "$WERCKER_HEROKU_DEPLOY_SOURCE_DIR" "$WERCKER_GIT_BRANCH";
+    if [ "$WERCKER_HEROKU_DEPLOY_JAR_KEEP_REPOSITORY" == "true" ]; then
+        use_current_git_directory "$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR" "$WERCKER_GIT_BRANCH";
     else
-        use_new_git_repository "$WERCKER_HEROKU_DEPLOY_SOURCE_DIR";
+        use_new_git_repository "$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR";
     fi
 
     # Try to push the code
     set +e;
-    push_code "$WERCKER_HEROKU_DEPLOY_APP_NAME";
+    push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
     exit_code_push=$?
     set -e;
 
     # Retry pushing the code, if the first push failed and retry was not disabled
     if [ $exit_code_push -ne 0 ]; then
-        if [ "$WERCKER_HEROKU_DEPLOY_RETRY" == "false" ]; then
+        if [ "$WERCKER_HEROKU_DEPLOY_JAR_RETRY" == "false" ]; then
             info "push failed, not going to retry";
         else
             info "push failed, retrying push in 5 seconds";
             sleep 5;
 
             set +e;
-            push_code "$WERCKER_HEROKU_DEPLOY_APP_NAME";
+            push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
             exit_code_push=$?
             set -e;
         fi
     fi
 
-    if [ "$WERCKER_HEROKU_DEPLOY_INSTALL_TOOLBELT" == "true" -o -n "$WERCKER_HEROKU_DEPLOY_RUN" ]; then
+    if [ "$WERCKER_HEROKU_DEPLOY_JAR_INSTALL_TOOLBELT" == "true" -o -n "$WERCKER_HEROKU_DEPLOY_JAR_RUN" ]; then
         install_toolbelt;
     fi
 
     # Run a command, if the push succeeded and the user supplied a run command
-    if [ -n "$WERCKER_HEROKU_DEPLOY_RUN" ]; then
+    if [ -n "$WERCKER_HEROKU_DEPLOY_JAR_RUN" ]; then
         if [ $exit_code_push -eq 0 ]; then
             set +e;
-            execute_heroku_command "$WERCKER_HEROKU_DEPLOY_APP_NAME" "$WERCKER_HEROKU_DEPLOY_RUN";
+            execute_heroku_command "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME" "$WERCKER_HEROKU_DEPLOY_JAR_RUN";
             exit_code_run=$?
             set -e;
         fi
     fi
 
     # Remove a auto generated key (assuming we generated a public key at ${ssh_key_path}.pub)
-    if [ -z "$WERCKER_HEROKU_DEPLOY_KEY_NAME" ]; then
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_KEY_NAME" ]; then
         remove_ssh_key "${ssh_key_path}.pub";
     fi
 
@@ -101,32 +101,32 @@ main() {
 }
 
 init_wercker_environment_variables() {
-    if [ -z "$WERCKER_HEROKU_DEPLOY_KEY" ]; then
-        export WERCKER_HEROKU_DEPLOY_KEY="$HEROKU_KEY";
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_KEY" ]; then
+        export WERCKER_HEROKU_DEPLOY_JAR_KEY="$HEROKU_KEY";
     fi
 
-    if [ -z "$WERCKER_HEROKU_DEPLOY_APP_NAME" ]; then
-        export WERCKER_HEROKU_DEPLOY_APP_NAME="$HEROKU_APP_NAME";
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME" ]; then
+        export WERCKER_HEROKU_DEPLOY_JAR_APP_NAME="$HEROKU_APP_NAME";
     fi
 
-    if [ -z "$WERCKER_HEROKU_DEPLOY_APP_NAME" ]; then
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME" ]; then
         fail "app-name is required. User app-name parameter or \$HEROKU_APP_NAME environment variable"
     fi
 
-    if [ -z "$WERCKER_HEROKU_DEPLOY_USER" ]; then
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_USER" ]; then
         if [ ! -z "$HEROKU_USER" ]; then
-            export WERCKER_HEROKU_DEPLOY_USER="$HEROKU_USER";
+            export WERCKER_HEROKU_DEPLOY_JAR_USER="$HEROKU_USER";
         else
-            export WERCKER_HEROKU_DEPLOY_USER="heroku-deploy@wercker.com";
+            export WERCKER_HEROKU_DEPLOY_JAR_USER="heroku-deploy@wercker.com";
         fi
     fi
 
-    if [ -z "$WERCKER_HEROKU_DEPLOY_SOURCE_DIR" ]; then
-        export WERCKER_HEROKU_DEPLOY_SOURCE_DIR="$WERCKER_ROOT";
-        debug "option source_dir not set. Will deploy directory $WERCKER_HEROKU_DEPLOY_SOURCE_DIR";
+    if [ -z "$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR" ]; then
+        export WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR="$WERCKER_ROOT";
+        debug "option source_dir not set. Will deploy directory $WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR";
     else
         warn "Use of source_dir is deprecated. Please make sure that you fix your Heroku deploy version on a major version."
-        debug "option source_dir found. Will deploy directory $WERCKER_HEROKU_DEPLOY_SOURCE_DIR";
+        debug "option source_dir found. Will deploy directory $WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR";
     fi
 }
 

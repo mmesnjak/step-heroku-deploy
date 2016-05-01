@@ -49,30 +49,35 @@ main() {
         use_new_git_repository "$WERCKER_HEROKU_DEPLOY_JAR_SOURCE_DIR";
     fi
 
-    # Try to push the code
+#    # Try to push the code
+#    set +e;
+#    push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
+#    exit_code_push=$?
+#    set -e;
+#
+#    # Retry pushing the code, if the first push failed and retry was not disabled
+#    if [ $exit_code_push -ne 0 ]; then
+#        if [ "$WERCKER_HEROKU_DEPLOY_JAR_RETRY" == "false" ]; then
+#            info "push failed, not going to retry";
+#        else
+#            info "push failed, retrying push in 5 seconds";
+#            sleep 5;
+#
+#            set +e;
+#            push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
+#            exit_code_push=$?
+#            set -e;
+#        fi
+#    fi
+
+    # Install heroku toolbelt anyhow
+    install_toolbelt;
+
+    # Try to use heroku deploy:jar
     set +e;
-    push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
-    exit_code_push=$?
+    heroku_deploy_jar "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
+    exit_code_push=$?;
     set -e;
-
-    # Retry pushing the code, if the first push failed and retry was not disabled
-    if [ $exit_code_push -ne 0 ]; then
-        if [ "$WERCKER_HEROKU_DEPLOY_JAR_RETRY" == "false" ]; then
-            info "push failed, not going to retry";
-        else
-            info "push failed, retrying push in 5 seconds";
-            sleep 5;
-
-            set +e;
-            push_code "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
-            exit_code_push=$?
-            set -e;
-        fi
-    fi
-
-    if [ "$WERCKER_HEROKU_DEPLOY_JAR_INSTALL_TOOLBELT" == "true" -o -n "$WERCKER_HEROKU_DEPLOY_JAR_RUN" ]; then
-        install_toolbelt;
-    fi
 
     # Run a command, if the push succeeded and the user supplied a run command
     if [ -n "$WERCKER_HEROKU_DEPLOY_JAR_RUN" ]; then
@@ -242,13 +247,22 @@ use_random_ssh_key() {
 push_code() {
     local app_name="$1";
 
-    debug "starting heroku deployment with heroku deploy:jar";
-#    git push -f "git@heroku.com:$app_name.git" HEAD:master;
-    heroku deploy:jar --jar target/*.war
+    debug "starting heroku deployment with git push";
+    git push -f "git@heroku.com:$app_name.git" HEAD:master;
     local exit_code_push=$?;
 
     debug "git pushed exited with $exit_code_push";
     return $exit_code_push;
+}
+
+heroku_deploy_jar() {
+    local app_name="$1";
+
+    heroku deploy:jar --jar target/*.war --app "$app_name";
+    local exit_code_run=$?;
+
+    debug "heroku deploy:jar exited with $exit_code_run";
+    return $exit_code_run;
 }
 
 execute_heroku_command() {

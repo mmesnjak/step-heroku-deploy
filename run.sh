@@ -203,6 +203,9 @@ install_toolbelt() {
         export PATH="/usr/local/heroku/bin:$PATH"
 
         info 'finished heroku toolbelt installation';
+
+        heroku plugins:install https://github.com/heroku/heroku-deploy
+        info 'finished heroku deploy plugin installation';
     else
         info 'heroku toolbelt is available, and will not be installed by this step';
     fi

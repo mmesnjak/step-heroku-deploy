@@ -73,7 +73,7 @@ main() {
     # Install heroku toolbelt anyhow
     install_toolbelt;
 
-    cat "${HOME}/.netrc";
+#    cat "${HOME}/.netrc";
     # Try to use heroku deploy:jar
     set +e;
     heroku_deploy_jar "$WERCKER_HEROKU_DEPLOY_JAR_APP_NAME";
